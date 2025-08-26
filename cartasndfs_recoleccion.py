@@ -2,7 +2,6 @@
 Automatización para procesar cartas NDF desde Outlook
 Versión mejorada con manejo de excepciones y mejores prácticas
 """
-
 import win32com.client
 import re
 import logging
@@ -13,7 +12,6 @@ from pathlib import Path
 from typing import Optional, List, Tuple
 from contextlib import contextmanager
 import sys
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
