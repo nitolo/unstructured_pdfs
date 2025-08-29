@@ -121,7 +121,9 @@ class NDFProcessor:
             messages.Sort("[ReceivedTime]", True)
             
             # Procesar todos los correos del mes actual
-            start = datetime(self.today.year, self.today.month, 1)
+            #start = datetime(self.today.year, self.today.month, 1)
+            # Manual
+            start = datetime(self.today.year, self.today.month, 26)
             end = self.today
             
             date_filter = (
