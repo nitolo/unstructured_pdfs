@@ -98,15 +98,38 @@ class NDFProcessor:
             object: Objeto inbox o None si falla
         """
         try:
+            self.logger.info("Iniciando conexión con Outlook...")
             outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-            inbox = outlook.Folders("Mercado de Capitales Colombia").Folders("Cartas NDF")
-            self.logger.info("Conexión con Outlook establecida exitosamente")
+            
+            # Usar el método más robusto que funcionó
+            main_folder = outlook.Folders["Mercado de Capitales Colombia"]
+            inbox = main_folder.Folders["Cartas NDF"]
+            
+            # Verificar acceso
+            message_count = inbox.Items.Count
+            self.logger.info(f"✓ Conexión exitosa. Mensajes en carpeta: {message_count}")
+            
             return inbox
+            
         except Exception as e:
             self.logger.error(f"Error conectando con Outlook: {e}")
-            return None
             
-    def _get_filtered_messages(self, inbox: object) -> Tuple[object, datetime, datetime]:
+            # Intentar método alternativo como backup
+            try:
+                self.logger.info("Intentando método alternativo...")
+                outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+                inbox = outlook.Folders("Mercado de Capitales Colombia").Folders("Cartas NDF")
+                
+                message_count = inbox.Items.Count
+                self.logger.info(f"✓ Método alternativo exitoso. Mensajes: {message_count}")
+                
+                return inbox
+                
+            except Exception as e2:
+                self.logger.error(f"Método alternativo también falló: {e2}")
+                return None
+            
+    def _get_filtered_messages(self, inbox: object) -> Tuple[List[object], datetime, datetime]:
         """
         Obtiene mensajes filtrados por fecha
         
@@ -114,31 +137,56 @@ class NDFProcessor:
             inbox: Objeto inbox de Outlook
             
         Returns:
-            tuple: (mensajes_filtrados, fecha_inicio, fecha_fin)
+            tuple: (lista_mensajes_filtrados, fecha_inicio, fecha_fin)
         """
         try:
             messages = inbox.Items
-            messages.Sort("[ReceivedTime]", True)
+            messages.Sort("[ReceivedTime]", True)  # Orden descendente
             
-            # Procesar todos los correos del mes actual
-            #start = datetime(self.today.year, self.today.month, 1)
-            # Manual
-            start = datetime(self.today.year, self.today.month, 26)
+            self.logger.info(f"Total mensajes en carpeta: {messages.Count}")
+            
+            # Definir rango de fechas
+            start = datetime(self.today.year, self.today.month, 1)
             end = self.today
             
-            date_filter = (
-                f"[ReceivedTime] >= '{start.strftime('%m/%d/%Y %I:%M %p')}' "
-                f"AND [ReceivedTime] < '{end.strftime('%m/%d/%Y %I:%M %p')}'"
-            )
+            self.logger.info(f"Filtrando mensajes entre {start.date()} y {end.date()}")
             
-            filtered_messages = messages.Restrict(date_filter)
-            self.logger.info(f"Filtrados {filtered_messages.Count} mensajes del período")
+            # Filtrar manualmente (más confiable que Restrict)
+            filtered_messages = []
+            
+            for i in range(1, messages.Count + 1):
+                try:
+                    message = messages.Item(i)
+                    received = message.ReceivedTime
+                    
+                    # Convertir a naive datetime si tiene zona horaria
+                    if hasattr(received, "tzinfo") and received.tzinfo is not None:
+                        received = received.replace(tzinfo=None)
+                    
+                    # Verificar si está en el rango de fechas
+                    if start <= received <= end:
+                        filtered_messages.append(message)
+                        
+                except Exception as e:
+                    self.logger.warning(f"Error procesando mensaje {i}: {e}")
+                    continue
+            
+            self.logger.info(f"Filtrados {len(filtered_messages)} mensajes del período")
+            
+            # Log de algunos mensajes encontrados para verificación
+            if filtered_messages:
+                self.logger.info("Primeros mensajes encontrados:")
+                for i, msg in enumerate(filtered_messages[:3]):
+                    try:
+                        self.logger.info(f"  - {msg.Subject[:50]} ({msg.ReceivedTime})")
+                    except:
+                        self.logger.info(f"  - Mensaje {i+1} (error leyendo detalles)")
             
             return filtered_messages, start, end
             
         except Exception as e:
             self.logger.error(f"Error filtrando mensajes: {e}")
-            return None, None, None
+            return [], None, None
             
     def _sanitize_filename(self, filename: str) -> str:
         """
@@ -189,19 +237,19 @@ class NDFProcessor:
             self.logger.error(f"Error guardando adjunto {attachment.FileName}: {e}")
             return False
             
-    def process_attachments(self, messages: object, start: datetime, end: datetime) -> int:
+    def process_attachments(self, messages: List[object], start: datetime, end: datetime) -> int:
         """
         Procesa todos los adjuntos de los mensajes
         
         Args:
-            messages: Mensajes filtrados
+            messages: Lista de mensajes filtrados
             start: Fecha de inicio
             end: Fecha de fin
             
         Returns:
             int: Número de adjuntos procesados
         """
-        if not messages or messages.Count == 0:
+        if not messages or len(messages) == 0:
             self.logger.info("No hay correos con adjuntos para procesar")
             return 0
             
@@ -210,7 +258,11 @@ class NDFProcessor:
         try:
             for message in messages:
                 try:
-                    received = message.ReceivedTime.replace(tzinfo=None)
+                    received = message.ReceivedTime
+                    # Manejo seguro de timezone
+                    if hasattr(received, "tzinfo") and received.tzinfo is not None:
+                        received = received.replace(tzinfo=None)
+                        
                     if not (start <= received <= end):
                         continue
                         
@@ -402,12 +454,12 @@ class NDFProcessor:
             
         return moved_count
         
-    def process_download_links(self, messages: object, start: datetime, end: datetime) -> int:
+    def process_download_links(self, messages: List[object], start: datetime, end: datetime) -> int:
         """
         Procesa correos con enlaces de descarga JPM
         
         Args:
-            messages: Mensajes filtrados
+            messages: Lista de mensajes filtrados
             start: Fecha de inicio
             end: Fecha de fin
             
@@ -425,7 +477,11 @@ class NDFProcessor:
                     if not message.Subject.startswith("JPM Confirmation ID"):
                         continue
                         
-                    received = message.ReceivedTime.replace(tzinfo=None)
+                    received = message.ReceivedTime
+                    # Manejo seguro de timezone
+                    if hasattr(received, "tzinfo") and received.tzinfo is not None:
+                        received = received.replace(tzinfo=None)
+                        
                     if not (start <= received <= end):
                         continue
                         
@@ -513,7 +569,6 @@ def main():
     except Exception as e:
         print(f"Error crítico: {e}")
         return 1
-
 
 if __name__ == "__main__":
     sys.exit(main())
