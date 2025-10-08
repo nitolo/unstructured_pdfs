@@ -28,8 +28,8 @@ for subfolder in output_dir.iterdir():
             mail = outlook.CreateItem(0)
             mail.Subject = f"Cartas NDF - {subfolder.name} {fecha_hoy}"
             mail.To = "zamir.suz@telefonica.com"
-            cc = ["gerson.diaz@telefonica.com", "wilson.garavito@telefonica.com", "diego.perea@telefonica.com",
-                  "johann.najar@telefonica.com", "daniel.siachoque@telefonica.com"
+            cc = ["gerson.diaz@telefonica.com", "wilson.garavito@telefonica.com",
+                  "daniel.siachoque@telefonica.com", "tania.manzano@telefonica.com"
                   , "mercadodecapitales.co@telefonica.com", "n.torres01@telefonica.com"]
             mail.CC = "; ".join(cc)
             mail.SentOnBehalfOfName = "n.torres01@telefonica.com"

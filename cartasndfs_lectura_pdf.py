@@ -136,10 +136,10 @@ tasa_fwd:
 - Puede aparecer como "Tasa", "Strike", "Rate", "Forward Rate", "Tasa Forward"
 
 valor_nominal_usd:
-- Es el monto nocional/principal en dólares estadounidenses
+- Es el monto nocional/principal/valor negociado en dólares estadounidenses.
 - SIEMPRE acompañado de "USD" o indicado en columna de moneda USD
 - NO es el equivalente en COP (que será mucho mayor)
-- Buscar valores como "1,000,000.00 USD", "2,500,000 USD"
+- Buscar valores como "1,000,000.00 USD", "2,500,000 USD", "1,000,000.00"
 - IGNORAR valores en COP (que son resultado de multiplicar tasa x nominal)
 
 fecha_inicio:
@@ -188,7 +188,10 @@ Procede con la extracción:"""
     }
 
     try:
-        response = requests.post("http://localhost:11434/api/generate", json=payload, timeout=180)
+        response = requests.post("http://localhost:11434/api/generate"
+        , json=payload
+        , timeout=180 # importantisimo acomodar esto. muchas veces toca cambiarlo por la potencia del compu
+        )
         result = response.json()
         respuesta_texto = result.get('response', '')
         
@@ -237,7 +240,7 @@ def main():
         nuevo_path = destino_dir / nuevo_nombre
         
         try:
-            shutil.move(str(pdf_file), str(nuevo_path))
+            shutil.copy(str(pdf_file), str(nuevo_path))
             print(f"Movido a: {nuevo_path}")
         except Exception as e:
             print(f"Error moviendo archivo: {e}")

@@ -107,7 +107,7 @@ class NDFProcessor:
             
             # Verificar acceso
             message_count = inbox.Items.Count
-            self.logger.info(f"✓ Conexión exitosa. Mensajes en carpeta: {message_count}")
+            self.logger.info(f"Conexión exitosa. Mensajes en carpeta: {message_count}")
             
             return inbox
             
@@ -121,7 +121,7 @@ class NDFProcessor:
                 inbox = outlook.Folders("Mercado de Capitales Colombia").Folders("Cartas NDF")
                 
                 message_count = inbox.Items.Count
-                self.logger.info(f"✓ Método alternativo exitoso. Mensajes: {message_count}")
+                self.logger.info(f"Método alternativo exitoso. Mensajes: {message_count}")
                 
                 return inbox
                 
@@ -146,7 +146,8 @@ class NDFProcessor:
             self.logger.info(f"Total mensajes en carpeta: {messages.Count}")
             
             # Definir rango de fechas
-            start = datetime(self.today.year, self.today.month, 1)
+            #start = datetime(self.today.year, self.today.month, 1)
+            start = datetime(self.today.year, 10, 5)
             end = self.today
             
             self.logger.info(f"Filtrando mensajes entre {start.date()} y {end.date()}")
