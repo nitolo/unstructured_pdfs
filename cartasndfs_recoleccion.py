@@ -147,7 +147,7 @@ class NDFProcessor:
             
             # Definir rango de fechas
             #start = datetime(self.today.year, self.today.month, 1)
-            start = datetime(self.today.year, 10, 5)
+            start = datetime(self.today.year, 12, 18)
             end = self.today
             
             self.logger.info(f"Filtrando mensajes entre {start.date()} y {end.date()}")

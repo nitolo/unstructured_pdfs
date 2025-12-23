@@ -29,7 +29,7 @@ for subfolder in output_dir.iterdir():
             mail.Subject = f"Cartas NDF - {subfolder.name} {fecha_hoy}"
             mail.To = "zamir.suz@telefonica.com"
             cc = ["gerson.diaz@telefonica.com", "wilson.garavito@telefonica.com",
-                  "daniel.siachoque@telefonica.com", "tania.manzano@telefonica.com"
+                  "daniel.siachoque@telefonica.com", "tania.manzano@telefonica.com", "taniaalejandra.diaz@telefonica.com"
                   , "mercadodecapitales.co@telefonica.com", "n.torres01@telefonica.com"]
             mail.CC = "; ".join(cc)
             mail.SentOnBehalfOfName = "n.torres01@telefonica.com"

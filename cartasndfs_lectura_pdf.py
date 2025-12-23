@@ -78,7 +78,7 @@ def extract_text_from_pdf(file_path):
         text = ""
         for image in images:
             text += pytesseract.image_to_string(image, lang='eng+spa')
-        banco = "SCOTIABANK"
+        banco = "DAVIbank"
         
     elif "_NDFV_FW" in filename:  # ITAÚ
         images = convert_from_path(file_path, dpi=500, poppler_path=directory_poppler)
@@ -101,7 +101,7 @@ def detect_banco_from_text(text):
     bank_patterns = [
         r"(SCOTIABANK)", r"(DAVIVIENDA)", r"(ITAÚ)", r"(BANCOLOMBIA)",
         r"(JPMorgan)", r"(BANCO DE OCCIDENTE)", r"(BANCO SANTANDER)", 
-        r"(CITIBANK COLOMBIA)"
+        r"(CITIBANK COLOMBIA)", r"(CORFICOLOMBIANA)", r"(DAVIbank)"
     ]
     
     for pattern in bank_patterns:
@@ -190,7 +190,7 @@ Procede con la extracción:"""
     try:
         response = requests.post("http://localhost:11434/api/generate"
         , json=payload
-        , timeout=180 # importantisimo acomodar esto. muchas veces toca cambiarlo por la potencia del compu
+        , timeout=280 # importantisimo acomodar esto. muchas veces toca cambiarlo por la potencia del compu
         )
         result = response.json()
         respuesta_texto = result.get('response', '')
